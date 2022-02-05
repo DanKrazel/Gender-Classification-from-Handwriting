@@ -16,6 +16,7 @@ from sklearn.metrics import classification_report
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import train_test_split
 import argparse
 import cv2
 import os
@@ -88,22 +89,41 @@ def compute_LBP(path_train, path_valid, path_test):
             # label and data lists
             #train_labels.append(imagePath.split(os.path.sep)[-2])
             train_data_arr.append(hist)
-            train_labels_arr.append(i)
+            train_labels_arr.append(Categories.index(i))
             # train a Linear SVM on the data
 
-    #train_data = np.array(train_data_arr)
-    #train_label = np.array(train_labels_arr)
-    #df = pd.DataFrame(train_data)  # dataframe
-    #df['Target'] = train_label
+    train_data = np.array(train_data_arr)
+    train_label = np.array(train_labels_arr)
+    df = pd.DataFrame(train_data)  # dataframe
+    #print("df :")
+    df['Target'] = train_label
+    #print(df)
+    #print(df.head())
+    print("x_train :")
+    x_train = df.iloc[:, :-1]
+    print(x_train)
+    y_train = df.iloc[:, -1]  # output data
+    print("y_train :")
+    print(y_train)
     #x_train = df.iloc[:, :-1]  # input data
     #y_train = df.iloc[:, -1]  # output data
 
-    param_grid = {'C': [0.1, 1, 10, 100], 'gamma': [0.0001, 0.001, 0.1, 1]}
+    #print(train_data)
+    #print(train_label)
+    param_grid = {'C': [0.1, 1, 10, 100], 'gamma': [0.0001, 0.001, 0.1, 1], 'kernel': ['poly', 'linear', 'rbf', 'sigmoid']}
     svc = svm.SVC()
     model = GridSearchCV(svc, param_grid)
-    model.fit(train_data_arr, train_labels_arr)
+    #print(model.best_params_)
+    model.fit(x_train, train_label)
+    print(model.best_params_)
+    print('The Model is trained well with the given images')
+    #y_pred = model.predict(x_test)
+    #print("The predicted Data is :")
+    #print(y_pred)
+    #print("The actual data is:")
+    #print(np.array(y_test))
 
-    # loop over the testing images
+    # loop over the valid images
     print("Compute validation")
     for i in Categories:
         print(f'loading... category : {i}')
@@ -115,23 +135,39 @@ def compute_LBP(path_train, path_valid, path_test):
             gray = cv2.cvtColor(img_float32, cv2.COLOR_BGR2GRAY)
             hist = desc.describe(gray)
             test_data_arr.append(hist)
-            test_labels_arr.append(i)
-            prediction = model.predict(hist.reshape(1, -1))
-            predictions_arr.append(prediction[0])
+            test_labels_arr.append(Categories.index(i))
+            #prediction = model.predict(hist.reshape(1, -1))
+            #predictions_arr.append(prediction[0])
 
-
-
+    test_data = np.array(test_data_arr)
+    test_label = np.array(test_labels_arr)
+    df = pd.DataFrame(test_data)  # dataframe
+    #print("df :")
+    df['Target'] = test_label
+    # print(df)
+    #print(df.head())
+    #print("x_train :")
+    x_test = df.iloc[:, :-1]  # input data
+    y_test = df.iloc[:, -1]  # output data
+    print("x_test :")
+    print(x_test)
+    print("y_test :")
+    print(y_test)
+    #predictions_arr = model.predict(train_data)
+    predictions = model.predict(x_test)
     #print("Accuracy: {}%".format(model.score(test_data, test_labels) * 100))
-    #print(test_labels_arr)
-    #print(predictions_arr)
-    print(f"Accuracy : {accuracy_score(predictions_arr, test_labels_arr) * 100}%")
-    matrix = confusion_matrix(test_labels_arr, predictions_arr)
+    #print(test_label)
+    #print(predictions)
+    #print(f"Accuracy : {accuracy_score(predictions, y_test) * 100}%")
+    #print("Accuracy: {}%".format(model.score(predictions, y_test) * 100))
+    matrix = confusion_matrix(test_label, predictions)
     print('Confusion matrix : \n', matrix)
+    print('Classification report : \n', classification_report(y_test,predictions))
 
     f = open("result.txt", "w+")
     f.write(f"number of points :{numberOfPoints}\n")
     f.write(f"radius :{radius}\n")
-    f.write(f"Accuracy : {accuracy_score(predictions_arr, test_labels_arr) * 100}%\n")
+    f.write(f"Accuracy : {accuracy_score(predictions, y_test) * 100}%\n")
    # for line in matrix:
             #np.savetxt(f, line, fmt='%.2f')
     f.write(f"Confusion matrix : {matrix}\n")
@@ -139,7 +175,7 @@ def compute_LBP(path_train, path_valid, path_test):
     f.close()
 
     # display the image and the prediction
-    #print(classification_report(test_labels, model.predict(test_data)))
+    #print(classification_report(test_labels, model.predict(test_data)))"""
 
         #cv2.putText(image, prediction[0], (10, 30), cv2.FONT_HERSHEY_SIMPLEX,1.0, (0, 0, 255), 3)
         #cv2.imshow("Image", image)
