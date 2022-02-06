@@ -1,5 +1,5 @@
 number of points :15
 radius :3
-Accuracy : 66.66666666666666%
-Confusion matrix : [[19  5]
- [11 13]]
+Accuracy : 68.57142857142857%
+Confusion matrix : [[27  8]
+ [14 21]]
